@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webcam to Canvas</title>
+    <style>
+      .container {
+         position: relative;
+         display: inline-block;
+      }
+      .container canvas, .container video {
+         display: block;
+      }
+      .container div, .container canvas {
+         position: absolute;
+         top: 0;
+         left: 0;
+      }
+      .container div {
+         width: 100%;
+         height: 100%;
+         background: repeating-linear-gradient(
+           45deg,
+           rgb(0, 0, 0),
+           rgb(255, 255, 255) 10px,
+           rgb(0, 0, 0) 10px,
+           rgb(255, 255, 255) 20px
+         );
+         mask-image: -moz-element(#mask);
+      }
+      #mask {
+         /*mix-blend-mode: multiply;*/
+      }
+    </style>
+</head>
+<body>
+   <div>
+      <div class="container">
+         <video id="video"></video>
+         <canvas id="mask"></canvas>
+      </div>
+      <canvas id="canvas"></canvas>
+   </div>
+   <div>
+      <button onclick="mapChosen=map.red">Red</button>
+      <button onclick="mapChosen=map.orange">Orange</button>
+      <button onclick="mapChosen=map.yellow">Yellow</button>
+      <button onclick="mapChosen=map.green">Green</button>
+      <button onclick="mapChosen=map.blue">Blue</button>
+      <button onclick="mapChosen=map.purple">Purple</button>
+   </div>
+
+<script>
+   // Hue
+   // Red: 0-20
+   // Orange: 20-40
+   // Yellow: 40-60
+   // Green: 60-180
+   // Blue: 180-260
+   // Purple: 260-330
+   // Red: 330-360
+
+   const map = {
+      red: h => h <= 15 || h > 340,
+      orange: h => h > 15 && h <= 30,
+      yellow: h => h > 30 && h <= 60,
+      green: h => h > 60 && h <= 180,
+      blue: h => h > 180 && h <= 260,
+      purple: h => h > 260 && h <= 340,
+   };
+
+   let mapChosen = null;
+
+   // const video = document.createElement('video');
+   const video = document.getElementById('video');
+   const canvas = document.getElementById('canvas');
+   const maskCanvas = document.getElementById('mask');
+   const ctx = canvas.getContext('2d', {
+      willReadFrequently: true,
+   });
+   const maskCtx = maskCanvas.getContext('2d', {
+      willReadFrequently: true,
+   });
+   const tile = document.createElement('canvas');
+   const tileCtx = tile.getContext('2d');
+   tile.width = 10;
+   tile.height = 10;
+   const gradient = maskCtx.createLinearGradient(0, 0, tile.width, tile.height);
+    let colorStops = [
+        [0, 'white'],
+        [0.35, 'white'],
+        [0.35, 'black'],
+        [0.5, 'black'],
+        [0.5, 'white'],
+        [0.85, 'white'],
+        [0.85, 'black'],
+        [1, 'black']
+    ];
+    colorStops.forEach(element => {
+        gradient.addColorStop(element[0], element[1]);
+    });
+   tileCtx.fillStyle = gradient;
+   tileCtx.fillRect(0, 0, tile.width, tile.height);
+   const tilePattern = tileCtx.createPattern(tile, 'repeat');
+
+
+
+   navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+          video.srcObject = stream;
+          video.onloadedmetadata = () => {
+              canvas.width = video.videoWidth;
+              canvas.height = video.videoHeight;
+              maskCanvas.width = video.videoWidth;
+              maskCanvas.height = video.videoHeight;
+              maskCtx.fillStyle = tilePattern;
+              video.play();
+              draw();
+          };
+      })
+      .catch(err => console.error('Error: ', err));
+
+   function draw() {
+      ctx.filter = "blur(4px)";
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+       maskCtx.fillRect(0, 0, maskCanvas.width, maskCanvas.height);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      const maskImageData = maskCtx.getImageData(0, 0, canvas.width, canvas.height);
+      const maskData = maskImageData.data;
+      for (let i = 0; i < data.length; i += 4) {
+         const hsv = rgb2hsv(data[i], data[i+1], data[i+2]);
+         const h = hsv[0];
+
+         maskData[i+3] = 0;
+
+         if (hsv[2] < 0.25) {
+            data[i] = data[i+1] = data[i+2] = 0;
+            continue;
+         } else if (hsv[2] > 0.98) {
+            data[i] = data[i+1] = data[i+2] = 255;
+            continue;
+         }
+
+         if (mapChosen && mapChosen(h)) {
+            maskData[i+3] = 255;
+         }
+
+         if (map.red(h)) {
+            data[i] = 255;
+            data[i+1] = data[i+2] = 0;
+         } else if (map.orange(h)) {
+            data[i] = 255;
+            data[i+1] = 165;
+            data[i+2] = 0;
+         } else if (map.yellow(h)) {
+            data[i] = data[i+1] = 255;
+            data[i+2] = 0;
+         } else if (map.green(h)) {
+            data[i+1] = 255;
+            data[i] = data[i+2] = 0;
+         } else if (map.blue(h)) {
+            data[i+2] = 255;
+            data[i] = data[i+1] = 0;
+         } else if (map.purple(h)) {
+            data[i] = data[i+2] = 255;
+            data[i+1] = 0;
+         }
+      }
+      ctx.putImageData(imageData, 0, 0);
+      maskCtx.putImageData(maskImageData, 0, 0);
+      requestAnimationFrame(draw);
+   }
+
+   // https://stackoverflow.com/a/54070620/1796523
+   function rgb2hsv(r,g,b) {
+      r/=255, g/=255,b/=255;
+     let v=Math.max(r,g,b), c=v-Math.min(r,g,b);
+     let h= c && ((v==r) ? (g-b)/c : ((v==g) ? 2+(b-r)/c : 4+(r-g)/c));
+
+     return [60*(h<0?h+6:h), v&&c/v, v];
+   }
+</script>
+</body>
+</html>
