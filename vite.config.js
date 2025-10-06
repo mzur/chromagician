@@ -4,7 +4,7 @@ import rawLoader from 'vite-raw-plugin'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/',
+  base: '',
   plugins: [
     vue(),
     rawLoader({fileRegex: /\.(fs|vs)$/}),
