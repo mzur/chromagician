@@ -22,7 +22,7 @@ export default class Handler {
 
         this.assets_ = {
             buffers: {},
-            framebuffers: {},
+            framebuffers: [],
             textures: [],
         };
 
@@ -149,8 +149,8 @@ export default class Handler {
             gl.deleteBuffer(assets.buffers[key]);
         });
 
-        Object.keys(assets.framebuffers).forEach(function (key) {
-            gl.deleteFramebuffer(assets.framebuffers[key]);
+        assets.framebuffers.forEach(function (framebuffer) {
+            gl.deleteFramebuffer(framebuffer);
         });
 
         assets.textures.forEach(function (texture) {
@@ -172,12 +172,12 @@ export default class Handler {
         return gl.createFramebuffer();
     }
 
-    getFramebuffer(id) {
-        if (!this.assets_.framebuffers[id]) {
-            this.assets_.framebuffers[id] = this.createFramebuffer_(this.gl_);
-        }
+    getNewFramebuffer() {
+        const framebuffer = this.createFramebuffer_(this.gl_);
 
-        return this.assets_.framebuffers[id];
+        this.assets_.framebuffers.push(framebuffer);
+
+        return framebuffer;
     }
 
     createBuffer_(gl) {
@@ -237,8 +237,8 @@ export default class Handler {
         this.programs_.push(this.addProgram_(this.gl_, program));
     }
 
-    render(programs) {
-        this.renderSync_(this.gl_, programs || []);
+    render() {
+        this.renderSync_(this.gl_, this.programs_);
     }
 
     destruct() {
