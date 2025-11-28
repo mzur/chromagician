@@ -35,7 +35,6 @@ function getCameraConstraints() {
       facingMode: 'environment',
       width: width,
       height: height,
-      aspectRatio: aspectRatio
    };
 }
 
