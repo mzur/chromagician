@@ -47,28 +47,36 @@ vec4 getCrosshatchPattern(vec2 pos, float time, float aspectRatio) {
 
     float lineWidth = 0.15;
     float doubleWidth = lineWidth * 2.0;
+    float aaWidth = 0.02; // Anti-aliasing width
 
     // Create diagonal lines in both directions
     float d1 = fract((p.x + p.y) * 0.707);
     float d2 = fract((p.x - p.y) * 0.707);
 
-    // Check if we're in a line zone for either diagonal
-    bool inD1 = d1 < doubleWidth;
-    bool inD2 = d2 < doubleWidth;
+    // Calculate anti-aliased black line intensities
+    float black1 = 1.0 - smoothstep(lineWidth - aaWidth, lineWidth, d1);
+    float black2 = 1.0 - smoothstep(lineWidth - aaWidth, lineWidth, d2);
+    float blackLine = max(black1, black2);
 
-    // Return transparent if not in any line zone
-    if (!inD1 && !inD2) {
+    // Calculate anti-aliased white line intensities
+    float white1 = smoothstep(lineWidth - aaWidth, lineWidth, d1) -
+                   smoothstep(doubleWidth - aaWidth, doubleWidth, d1);
+    float white2 = smoothstep(lineWidth - aaWidth, lineWidth, d2) -
+                   smoothstep(doubleWidth - aaWidth, doubleWidth, d2);
+    float whiteLine = max(white1, white2);
+
+    // Combine black and white lines
+    float totalAlpha = max(blackLine, whiteLine);
+
+    // Return transparent if no line
+    if (totalAlpha < 0.01) {
         return vec4(0.0);
     }
 
-    // Determine color based on position within line
-    vec3 color = vec3(1.0); // Default to white
+    // Blend black and white based on their contributions
+    vec3 color = mix(vec3(1.0), vec3(0.0), blackLine / totalAlpha);
 
-    if ((inD1 && d1 < lineWidth) || (inD2 && d2 < lineWidth)) {
-        color = vec3(0.0); // Black line
-    }
-
-    return vec4(color, 0.8); // Semi-transparent overlay
+    return vec4(color, totalAlpha * 0.8);
 }
 
 void main() {
