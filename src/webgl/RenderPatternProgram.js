@@ -3,11 +3,11 @@ import fragmentShaderSource from './render-pattern.fs';
 import vertexShaderSource from './rectangle.vs';
 
 export default class RenderPatternProgram extends Program {
-    constructor(video) {
+    constructor() {
         super(vertexShaderSource, fragmentShaderSource);
         this.inputTexture = null;
-        this.video = video;
-        this.colorSwitch = 0; // 0 = show all, 1-6 = show only that color
+        this.videoTexture = null;
+        this.colorSwitch = 0; // 1-6 = show only that color (see fragment shader)
         this.colorSwitchPointer = null;
     }
 
@@ -16,11 +16,21 @@ export default class RenderPatternProgram extends Program {
         handler.useVertexPositions(this);
         handler.useTexturePositions(this);
         this.colorSwitchPointer = gl.getUniformLocation(pointer, 'u_color_switch');
+
+        // Set up texture unit bindings
+        let imageLocation = gl.getUniformLocation(pointer, 'u_image');
+        let videoLocation = gl.getUniformLocation(pointer, 'u_video');
+        gl.uniform1i(imageLocation, 0); // TEXTURE0
+        gl.uniform1i(videoLocation, 1); // TEXTURE1
     }
 
     beforeRender(gl, handler) {
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, this.inputTexture);
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, this.videoTexture);
+
         gl.uniform1ui(this.colorSwitchPointer, this.colorSwitch);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     }
@@ -31,6 +41,10 @@ export default class RenderPatternProgram extends Program {
 
     link(program) {
         this.inputTexture = program.getOutputTexture();
+    }
+
+    linkVideo(program) {
+        this.videoTexture = program.inputTexture;
     }
 
     setColorSwitch(colorValue) {

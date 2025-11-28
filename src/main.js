@@ -46,6 +46,7 @@ navigator.mediaDevices.getUserMedia({video: {
    let patternProgram = new RenderPatternProgram();
    handler.addProgram(patternProgram);
    patternProgram.link(detectProgram);
+   patternProgram.linkVideo(denoise);
    patternProgram.setColorSwitch(colorSwitch);
    video.play();
    return video;
