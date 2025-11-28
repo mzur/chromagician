@@ -28,7 +28,7 @@ export default class Handler {
 
         this.renderPromises_ = {};
 
-        this.prepareWebgl_(this.gl_, this.assets_);
+        this.prepareWebgl_(this.gl_, this.assets_, options.flipY || false);
     }
 
     handleContextLost_(event) {
@@ -62,7 +62,7 @@ export default class Handler {
         return gl;
     }
 
-    prepareWebgl_(gl, assets) {
+    prepareWebgl_(gl, assets, flipY) {
         // We only draw a simple rectangular canvas that consists of two triangles.
         let buffer = this.getBuffer('textureCoordinateBuffer');
         let array = new Float32Array([0, 1, 1, 1, 0, 0, 1, 0]);
@@ -74,7 +74,7 @@ export default class Handler {
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
         gl.bufferData(gl.ARRAY_BUFFER, array, gl.STATIC_DRAW);
 
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
     }
 
     compileShader_(gl, shader, source) {

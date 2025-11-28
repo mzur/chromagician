@@ -2,6 +2,7 @@ import DenoiseProgram from './webgl/DenoiseProgram.js';
 import DetectColorProgram from './webgl/DetectColorProgram.js';
 import WebglHandler from './webgl/Handler.js';
 import WhiteBalanceProgram from './webgl/WhiteBalanceProgram.js';
+import RenderPatternProgram from './webgl/RenderPatternProgram.js';
 // import { FastAverageColor } from 'fast-average-color';
 
 const video = document.getElementById('video');
@@ -29,7 +30,8 @@ navigator.mediaDevices.getUserMedia({video: {
 .then(video => {
    canvas.width = video.videoWidth;
    canvas.height = video.videoHeight;
-   handler = new WebglHandler({canvas});
+   let flipY = false;
+   handler = new WebglHandler({canvas, flipY});
    window.addEventListener('beforeunload', handler.destruct.bind(handler));
    let denoise = new DenoiseProgram(video);
    handler.addProgram(denoise);
@@ -37,9 +39,12 @@ navigator.mediaDevices.getUserMedia({video: {
    // whiteBalance = new WhiteBalanceProgram(video);
    // handler.addProgram(whiteBalance);
    // whiteBalance.link(denoise);
-   let detectProgram = new DetectColorProgram();
+   let detectProgram = new DetectColorProgram(video);
    handler.addProgram(detectProgram);
    detectProgram.link(denoise);
+   let patternProgram = new RenderPatternProgram();
+   handler.addProgram(patternProgram);
+   patternProgram.link(detectProgram);
    video.play();
    return video;
 })
