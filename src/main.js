@@ -38,17 +38,6 @@ function getCameraConstraints() {
       [width, height] = [height, width];
    }
 
-   // Update debug info
-   const debugScreen = document.getElementById('debug-screen');
-   if (debugScreen) {
-      debugScreen.innerHTML = `Screen: ${screenWidth}x${screenHeight}<br>Screen AR: ${aspectRatio.toFixed(3)}<br>Mobile: ${mobile}, Portrait: ${isPortrait}`;
-   }
-
-   const debugRequested = document.getElementById('debug-requested');
-   if (debugRequested) {
-      debugRequested.innerHTML = `Requested: ${width}x${height}<br>Requested AR: ${(width/height).toFixed(3)}`;
-   }
-
    return {
       facingMode: 'environment',
       aspectRatio: { ideal: aspectRatio },
@@ -69,13 +58,6 @@ navigator.mediaDevices.getUserMedia({video: cameraConstraints})
    return promise;
 })
 .then(video => {
-   // Update debug info with actual video dimensions
-   const videoAspect = video.videoWidth / video.videoHeight;
-   const debugVideo = document.getElementById('debug-video');
-   if (debugVideo) {
-      debugVideo.innerHTML = `Video: ${video.videoWidth}x${video.videoHeight}<br>Video AR: ${videoAspect.toFixed(3)}`;
-   }
-
    canvas.width = video.videoWidth;
    canvas.height = video.videoHeight;
    handler = new WebglHandler({canvas, flipY});

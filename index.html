@@ -27,25 +27,6 @@
             object-fit: contain;
         }
 
-        #debug {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.8);
-            color: #0f0;
-            font-family: monospace;
-            font-size: 11px;
-            padding: 10px;
-            border: 1px solid #0f0;
-            line-height: 1.4;
-            max-width: 300px;
-            z-index: 1000;
-        }
-
-        #debug div {
-            margin: 2px 0;
-        }
-
         #controls {
             position: absolute;
             bottom: 0;
@@ -87,12 +68,6 @@
 </head>
 <body>
     <canvas id="canvas"></canvas>
-    <div id="debug">
-        <div><strong>DEBUG INFO</strong></div>
-        <div id="debug-screen"></div>
-        <div id="debug-requested"></div>
-        <div id="debug-video"></div>
-    </div>
     <div id="controls">
         <button class="color-btn active" data-color="1">Red</button>
         <button class="color-btn" data-color="2">Orange</button>
