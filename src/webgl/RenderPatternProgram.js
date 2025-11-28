@@ -11,6 +11,7 @@ export default class RenderPatternProgram extends Program {
         this.colorSwitchPointer = null;
         this.timePointer = null;
         this.time = 0.0;
+        this.animationSpeed = 0.025;
     }
 
     initialize(gl, handler) {
@@ -37,7 +38,7 @@ export default class RenderPatternProgram extends Program {
         gl.uniform1ui(this.colorSwitchPointer, this.colorSwitch);
 
         // Increment time and loop when pattern cycle completes
-        this.time = (this.time + 0.05) % 10.0;
+        this.time = (this.time + this.animationSpeed) % 10.0;
 
         gl.uniform1f(this.timePointer, this.time);
 

@@ -22,18 +22,30 @@ out vec4 outColor;
 
 // Generate animated crosshatch pattern.
 vec4 getCrosshatchPattern(vec2 pos, float time) {
-    // Scale position to control pattern density
-    vec2 p = pos * 40.0;
+    // Rotate around center of texture
+    vec2 center = vec2(0.5);
+    vec2 centered = pos - center;
 
-    // Animated offset
-    float offset = time * 1.5;
+    // Rotation angle based on time
+    float angle = time * 0.3;
+    float c = cos(angle);
+    float s = sin(angle);
+
+    // Apply rotation matrix
+    vec2 rotated = vec2(
+        centered.x * c - centered.y * s,
+        centered.x * s + centered.y * c
+    ) + center;
+
+    // Scale position to control pattern density
+    vec2 p = rotated * 40.0;
 
     float lineWidth = 0.15;
     float doubleWidth = lineWidth * 2.0;
 
     // Create diagonal lines in both directions
-    float d1 = fract((p.x + p.y) * 0.707 + offset);
-    float d2 = fract((p.x - p.y) * 0.707 - offset);
+    float d1 = fract((p.x + p.y) * 0.707);
+    float d2 = fract((p.x - p.y) * 0.707);
 
     // Check if we're in a line zone for either diagonal
     bool inD1 = d1 < doubleWidth;
