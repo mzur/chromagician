@@ -12,23 +12,36 @@ const colorSwitch = 1;
 let handler;
 let patternProgram;
 
+// Detect if we're on a mobile device
+function isMobile() {
+   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
 // Calculate camera resolution matching screen aspect ratio
 function getCameraConstraints() {
    const screenWidth = window.innerWidth;
    const screenHeight = window.innerHeight;
    const aspectRatio = screenWidth / screenHeight;
+   const isPortrait = screenHeight > screenWidth;
+   const mobile = isMobile();
 
    // Target around 640x480 pixels (307,200 total)
    const targetPixels = 307200;
 
    // Calculate dimensions maintaining aspect ratio
-   const height = Math.round(Math.sqrt(targetPixels / aspectRatio));
-   const width = Math.round(height * aspectRatio);
+   let height = Math.round(Math.sqrt(targetPixels / aspectRatio));
+   let width = Math.round(height * aspectRatio);
+
+   // On mobile in portrait mode, swap width/height for camera request
+   // because mobile cameras are physically landscape-oriented
+   if (mobile && isPortrait) {
+      [width, height] = [height, width];
+   }
 
    // Update debug info
    const debugScreen = document.getElementById('debug-screen');
    if (debugScreen) {
-      debugScreen.innerHTML = `Screen: ${screenWidth}x${screenHeight}<br>Screen AR: ${aspectRatio.toFixed(3)}`;
+      debugScreen.innerHTML = `Screen: ${screenWidth}x${screenHeight}<br>Screen AR: ${aspectRatio.toFixed(3)}<br>Mobile: ${mobile}, Portrait: ${isPortrait}`;
    }
 
    const debugRequested = document.getElementById('debug-requested');
