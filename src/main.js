@@ -16,6 +16,7 @@ const colorSwitch = 1;
 // let whiteBalance
 
 let handler;
+let patternProgram;
 
 navigator.mediaDevices.getUserMedia({video: {
    facingMode: 'environment',
@@ -43,12 +44,16 @@ navigator.mediaDevices.getUserMedia({video: {
    let detectProgram = new DetectColorProgram(video);
    handler.addProgram(detectProgram);
    detectProgram.link(denoise);
-   let patternProgram = new RenderPatternProgram();
+   patternProgram = new RenderPatternProgram();
    handler.addProgram(patternProgram);
    patternProgram.link(detectProgram);
    patternProgram.linkVideo(denoise);
    patternProgram.setColorSwitch(colorSwitch);
    video.play();
+
+   // Set up color button controls
+   setupColorButtons();
+
    return video;
 })
 .then(video => {
@@ -68,3 +73,20 @@ navigator.mediaDevices.getUserMedia({video: {
    };
    renderLoop();
 });
+
+function setupColorButtons() {
+   const buttons = document.querySelectorAll('.color-btn');
+
+   buttons.forEach(button => {
+      button.addEventListener('click', () => {
+         const colorValue = parseInt(button.dataset.color);
+
+         // Update active state
+         buttons.forEach(btn => btn.classList.remove('active'));
+         button.classList.add('active');
+
+         // Update pattern program
+         patternProgram.setColorSwitch(colorValue);
+      });
+   });
+}
