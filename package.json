@@ -8,6 +8,7 @@
     "build": "vite build"
   },
   "dependencies": {
+    "fast-average-color": "^9.5.0",
     "vite-raw-plugin": "^1.0.1",
     "vue": "^3.2.45"
   },

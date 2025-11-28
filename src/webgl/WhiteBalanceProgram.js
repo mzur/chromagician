@@ -1,19 +1,22 @@
 import Program from './Program.js';
-import fragmentShaderSource from './denoise.fs';
+import fragmentShaderSource from './white-balance.fs';
 import vertexShaderSource from './rectangle.vs';
 
-export default class DenoiseProgram extends Program {
+export default class WhiteBalanceProgram extends Program {
     constructor(video) {
         super(vertexShaderSource, fragmentShaderSource);
         this.inputTexture = null;
         this.framebuffer = null;
         this.outputTexture = null;
+        this.avgColor = [0, 0, 0];
+        this.avgColorPointer = null;
+        this.globalAvg = 0;
+        this.globalAvgPointer = null;
         this.video = video;
     }
 
     initialize(gl, handler) {
         this.inputTexture = handler.getNewTexture();
-        let pointer = this.getPointer();
         handler.useVertexPositions(this);
         handler.useTexturePositions(this);
 
@@ -26,15 +29,20 @@ export default class DenoiseProgram extends Program {
         gl.bindTexture(gl.TEXTURE_2D, null);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-        const textureSizePointer = gl.getUniformLocation(pointer, 'u_texture_size');
-        gl.uniform2f(textureSizePointer, this.video.videoWidth, this.video.videoHeight);
+        let pointer = this.getPointer();
+        this.avgColorPointer = gl.getUniformLocation(pointer, 'u_avg_color');
+        gl.uniform3f(this.avgColorPointer, 0, 0, 0);
+        this.globalAvgPointer = gl.getUniformLocation(pointer, 'u_global_avg');
+        gl.uniform1f(this.globalAvgPointer, 0);
     }
 
     beforeRender(gl, handler) {
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, this.inputTexture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.video);
-        gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+        // gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.uniform3f(this.avgColorPointer, ...this.avgColor);
+        gl.uniform1f(this.globalAvgPointer, this.globalAvg);
     }
 
     afterRender(gl, handler) {
@@ -43,5 +51,14 @@ export default class DenoiseProgram extends Program {
 
     getOutputTexture() {
         return this.outputTexture;
+    }
+
+    link(program) {
+        this.inputTexture = program.getOutputTexture();
+    }
+
+    setAvgColor(avg) {
+        this.avgColor = avg.slice(0, 3);
+        this.globalAvg = (avg[0] + avg[1] + avg[2]) / 3;
     }
 }
