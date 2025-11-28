@@ -16,19 +16,14 @@ let patternProgram;
 function getCameraConstraints() {
    const screenWidth = window.innerWidth;
    const screenHeight = window.innerHeight;
-   const aspectRatio = screenWidth / screenHeight;
-
-   // Target around 640x480 pixels (307,200 total)
-   const targetPixels = 307200;
-
-   // Calculate dimensions maintaining aspect ratio
-   const height = Math.round(Math.sqrt(targetPixels / aspectRatio));
-   const width = Math.round(height * aspectRatio);
+   const aspectRatio =  screenWidth / screenHeight;
 
    return {
       facingMode: 'environment',
-      width: width,
-      height: height,
+      aspectRatio: {ideal: aspectRatio},
+      width: { ideal: 640 },
+      height: { ideal: 480 },
+      whiteBalanceMode: 'continuous',
    };
 }
 
