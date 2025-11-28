@@ -4,6 +4,7 @@ precision highp float;
 precision lowp usampler2D;
 
 uniform usampler2D u_image;
+uniform uint u_color_switch;
 in vec2 v_texture_position;
 out vec4 outColor;
 
@@ -11,18 +12,16 @@ out vec4 outColor;
 // TODO think of a good pattern and implement it here. Ideas
 // - Read from fixed texture?
 // - Animate pattern/texture?
-vec3 makePattern() {
-   // TODO: Get width and height.
-   vec2 q = v_texture_position * vec2(480., 640.);
-   vec2 d = vec2(3.);
-   vec2 r = mod(q, d);
-   float g = mod( r.x + r.y, 2.0 );
-   return vec3(g);
-}
 
 // TODO: Also read video texture here and merge video with pattern.
 void main() {
    uint color = texture(u_image, v_texture_position).r;
+
+   // If color doesn't match the switch, render transparent
+   if (u_color_switch > 0u && color != u_color_switch) {
+      outColor = vec4(0.0);
+      return;
+   }
 
    if (color == 0u) {
       // Black

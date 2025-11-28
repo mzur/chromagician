@@ -8,6 +8,8 @@ import RenderPatternProgram from './webgl/RenderPatternProgram.js';
 const video = document.getElementById('video');
 const canvas = document.getElementById("canvas");
 const FPS_INTERVAL = 1000 / 5;
+const flipY = false;
+const colorSwitch = 1;
 
 // TODO
 // const fac = new FastAverageColor();
@@ -30,7 +32,6 @@ navigator.mediaDevices.getUserMedia({video: {
 .then(video => {
    canvas.width = video.videoWidth;
    canvas.height = video.videoHeight;
-   let flipY = false;
    handler = new WebglHandler({canvas, flipY});
    window.addEventListener('beforeunload', handler.destruct.bind(handler));
    let denoise = new DenoiseProgram(video);
@@ -45,6 +46,7 @@ navigator.mediaDevices.getUserMedia({video: {
    let patternProgram = new RenderPatternProgram();
    handler.addProgram(patternProgram);
    patternProgram.link(detectProgram);
+   patternProgram.setColorSwitch(colorSwitch);
    video.play();
    return video;
 })
