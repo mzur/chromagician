@@ -9,6 +9,8 @@ export default class RenderPatternProgram extends Program {
         this.videoTexture = null;
         this.colorSwitch = 0; // 1-6 = show only that color (see fragment shader)
         this.colorSwitchPointer = null;
+        this.timePointer = null;
+        this.time = 0.0;
     }
 
     initialize(gl, handler) {
@@ -16,6 +18,7 @@ export default class RenderPatternProgram extends Program {
         handler.useVertexPositions(this);
         handler.useTexturePositions(this);
         this.colorSwitchPointer = gl.getUniformLocation(pointer, 'u_color_switch');
+        this.timePointer = gl.getUniformLocation(pointer, 'u_time');
 
         // Set up texture unit bindings
         let imageLocation = gl.getUniformLocation(pointer, 'u_image');
@@ -32,6 +35,12 @@ export default class RenderPatternProgram extends Program {
         gl.bindTexture(gl.TEXTURE_2D, this.videoTexture);
 
         gl.uniform1ui(this.colorSwitchPointer, this.colorSwitch);
+
+        // Increment time and loop when pattern cycle completes
+        this.time = (this.time + 0.05) % 10.0;
+
+        gl.uniform1f(this.timePointer, this.time);
+
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     }
 

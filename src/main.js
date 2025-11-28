@@ -5,9 +5,9 @@ import WhiteBalanceProgram from './webgl/WhiteBalanceProgram.js';
 import RenderPatternProgram from './webgl/RenderPatternProgram.js';
 // import { FastAverageColor } from 'fast-average-color';
 
-const video = document.getElementById('video');
+const video = document.createElement('video');
 const canvas = document.getElementById("canvas");
-const FPS_INTERVAL = 1000 / 5;
+const FPS_INTERVAL = 1000 / 10;
 const flipY = false;
 const colorSwitch = 1;
 

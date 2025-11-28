@@ -1,5 +1,14 @@
 #version 300 es
 
+// Color mapping for u_image texture:
+// 0 = Black (undetected/background)
+// 1 = Red
+// 2 = Orange
+// 3 = Yellow
+// 4 = Green
+// 5 = Blue
+// 6 = Purple
+
 precision highp float;
 precision lowp usampler2D;
 precision mediump sampler2D;
@@ -7,46 +16,57 @@ precision mediump sampler2D;
 uniform usampler2D u_image;
 uniform sampler2D u_video;
 uniform uint u_color_switch;
+uniform float u_time;
 in vec2 v_texture_position;
 out vec4 outColor;
 
+// Generate animated crosshatch pattern.
+vec4 getCrosshatchPattern(vec2 pos, float time) {
+    // Scale position to control pattern density
+    vec2 p = pos * 40.0;
 
-// TODO think of a good pattern and implement it here. Ideas
-// - Read from fixed texture?
-// - Animate pattern/texture?
+    // Animated offset
+    float offset = time * 1.5;
+
+    float lineWidth = 0.15;
+    float doubleWidth = lineWidth * 2.0;
+
+    // Create diagonal lines in both directions
+    float d1 = fract((p.x + p.y) * 0.707 + offset);
+    float d2 = fract((p.x - p.y) * 0.707 - offset);
+
+    // Check if we're in a line zone for either diagonal
+    bool inD1 = d1 < doubleWidth;
+    bool inD2 = d2 < doubleWidth;
+
+    // Return transparent if not in any line zone
+    if (!inD1 && !inD2) {
+        return vec4(0.0);
+    }
+
+    // Determine color based on position within line
+    vec3 color = vec3(1.0); // Default to white
+
+    if ((inD1 && d1 < lineWidth) || (inD2 && d2 < lineWidth)) {
+        color = vec3(0.0); // Black line
+    }
+
+    return vec4(color, 0.8); // Semi-transparent overlay
+}
 
 void main() {
    uint color = texture(u_image, v_texture_position).r;
+   vec4 videoColor = texture(u_video, v_texture_position);
 
    // If color doesn't match the switch, render the video.
    if (color != u_color_switch) {
-      outColor = texture(u_video, v_texture_position);
+      outColor = videoColor;
       return;
    }
 
-   vec3 overlayColor;
-   if (color == 1u) {
-      // Red
-      overlayColor = vec3(1.0, 0.0, 0.0);
-   } else if (color == 2u) {
-      // Orange
-      overlayColor = vec3(1.0, 0.5, 0.0);
-   } else if (color == 3u) {
-      // Yellow
-      overlayColor = vec3(1.0, 1.0, 0.0);
-   } else if (color == 4u) {
-      // Green
-      overlayColor = vec3(0.0, 1.0, 0.0);
-   } else if (color == 5u) {
-      // Blue
-      overlayColor = vec3(0.0, 0.0, 1.0);
-   } else if (color == 6u) {
-      // Purple
-      overlayColor = vec3(1.0, 0.0, 1.0);
-   } else {
-      // Fallback
-      overlayColor = vec3(0.0, 0.0, 0.0);
-   }
+   // For matching color, overlay animated crosshatch pattern on video
+   vec4 pattern = getCrosshatchPattern(v_texture_position, u_time);
 
-   outColor = vec4(overlayColor, 1.0);
+   // Blend pattern with video using alpha
+   outColor = mix(videoColor, pattern, pattern.a);
 }
