@@ -18,11 +18,30 @@ const colorSwitch = 1;
 let handler;
 let patternProgram;
 
-navigator.mediaDevices.getUserMedia({video: {
-   facingMode: 'environment',
-   width: 640,
-   height: 480,
-}})
+// Calculate camera resolution matching screen aspect ratio
+function getCameraConstraints() {
+   const screenWidth = window.innerWidth;
+   const screenHeight = window.innerHeight;
+   const aspectRatio = screenWidth / screenHeight;
+
+   // Target around 640x480 pixels (307,200 total)
+   const targetPixels = 307200;
+
+   // Calculate dimensions maintaining aspect ratio
+   const height = Math.round(Math.sqrt(targetPixels / aspectRatio));
+   const width = Math.round(height * aspectRatio);
+
+   return {
+      facingMode: 'environment',
+      width: width,
+      height: height,
+      aspectRatio: aspectRatio
+   };
+}
+
+const cameraConstraints = getCameraConstraints();
+
+navigator.mediaDevices.getUserMedia({video: cameraConstraints})
 .then(stream => {
    const promise = new Promise((resolve) => {
       video.onloadedmetadata = () => resolve(video);
@@ -44,7 +63,7 @@ navigator.mediaDevices.getUserMedia({video: {
    let detectProgram = new DetectColorProgram(video);
    handler.addProgram(detectProgram);
    detectProgram.link(denoise);
-   patternProgram = new RenderPatternProgram();
+   patternProgram = new RenderPatternProgram(video);
    handler.addProgram(patternProgram);
    patternProgram.link(detectProgram);
    patternProgram.linkVideo(denoise);

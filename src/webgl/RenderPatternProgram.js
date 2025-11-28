@@ -3,13 +3,15 @@ import fragmentShaderSource from './render-pattern.fs';
 import vertexShaderSource from './rectangle.vs';
 
 export default class RenderPatternProgram extends Program {
-    constructor() {
+    constructor(video) {
         super(vertexShaderSource, fragmentShaderSource);
         this.inputTexture = null;
         this.videoTexture = null;
+        this.video = video;
         this.colorSwitch = 0; // 1-6 = show only that color (see fragment shader)
         this.colorSwitchPointer = null;
         this.timePointer = null;
+        this.aspectRatioPointer = null;
         this.time = 0.0;
         this.animationSpeed = 0.025;
     }
@@ -20,6 +22,7 @@ export default class RenderPatternProgram extends Program {
         handler.useTexturePositions(this);
         this.colorSwitchPointer = gl.getUniformLocation(pointer, 'u_color_switch');
         this.timePointer = gl.getUniformLocation(pointer, 'u_time');
+        this.aspectRatioPointer = gl.getUniformLocation(pointer, 'u_aspect_ratio');
 
         // Set up texture unit bindings
         let imageLocation = gl.getUniformLocation(pointer, 'u_image');
@@ -41,6 +44,10 @@ export default class RenderPatternProgram extends Program {
         this.time = (this.time + this.animationSpeed) % 10.0;
 
         gl.uniform1f(this.timePointer, this.time);
+
+        // Pass aspect ratio to prevent pattern stretching
+        const aspectRatio = this.video.videoWidth / this.video.videoHeight;
+        gl.uniform1f(this.aspectRatioPointer, aspectRatio);
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     }

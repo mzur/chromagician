@@ -17,14 +17,19 @@ uniform usampler2D u_image;
 uniform sampler2D u_video;
 uniform uint u_color_switch;
 uniform float u_time;
+uniform float u_aspect_ratio;
 in vec2 v_texture_position;
 out vec4 outColor;
 
 // Generate animated crosshatch pattern.
-vec4 getCrosshatchPattern(vec2 pos, float time) {
+vec4 getCrosshatchPattern(vec2 pos, float time, float aspectRatio) {
+    // Correct for aspect ratio to make pattern uniform
+    vec2 corrected = pos;
+    corrected.x *= aspectRatio;
+
     // Rotate around center of texture
-    vec2 center = vec2(0.5);
-    vec2 centered = pos - center;
+    vec2 center = vec2(aspectRatio * 0.5, 0.5);
+    vec2 centered = corrected - center;
 
     // Rotation angle based on time
     float angle = time * 0.3;
@@ -77,7 +82,7 @@ void main() {
    }
 
    // For matching color, overlay animated crosshatch pattern on video
-   vec4 pattern = getCrosshatchPattern(v_texture_position, u_time);
+   vec4 pattern = getCrosshatchPattern(v_texture_position, u_time, u_aspect_ratio);
 
    // Blend pattern with video using alpha
    outColor = mix(videoColor, pattern, pattern.a);
